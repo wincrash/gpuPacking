@@ -2,14 +2,11 @@
 #include "core/Device.h"
 #include "core/Parameters.h"
 #include "core/SimulationParameters.h"
-#include "dem/ContactHistory.h"
 #include "dem/ContactSearch.h"
 #include "dem/Forces.h"
 #include "dem/Integrator.h"
-#include "dem/ParallelBond.h"
 #include "dem/Reader.h"
 #include "dem/Time.h"
-#include "dem/WriteForceLogs.h"
 #include "dem/Writer.h"
 #include "utils/SystemCommand.h"
 #include <sstream>
@@ -30,16 +27,9 @@ int main(int argc, char *argv[]) {
 
   std::vector<AModule *> modules;
   modules.push_back(new ContactSearch(&data, &simParams));
-  modules.push_back(new ContactHistory(&data, &simParams));
-  
   modules.push_back(new Forces(&data, &simParams));
-  
-  modules.push_back(new ParallelBond(&data, &simParams));
   modules.push_back(new Integrator(&data, &simParams));
-
   modules.push_back(new Time(&data, &simParams));
-  modules.push_back(new WriteForceLogs(&data, &simParams));
-
   modules.push_back(new Writer(&data, &simParams));
   
   std::stringstream header;

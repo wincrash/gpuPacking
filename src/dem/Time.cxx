@@ -19,18 +19,4 @@ void Time::Processing() {
   simParams->WRITE_RESULTS = (simParams->cstep % simParams->WRITE_RESULTS_SKIP == 0);
   simParams->COMPUTE = (simParams->ctime <= simParams->END);
 
-  //double KOEF=1.0*simParams->cstep/simParams->speed_startup;
-  double KOEF=1.5707963267949*simParams->cstep/simParams->speed_startup;
-  KOEF=std::sin(KOEF);
-  if (simParams->cstep>=simParams->speed_startup) KOEF=1;
-
-
-  simParams->WALLS_MIN[0] += simParams->WALL_SPEED[0]*KOEF * simParams->DELTA;
-  simParams->WALLS_MAX[0] -= simParams->WALL_SPEED[1]*KOEF * simParams->DELTA;
-
-  simParams->WALLS_MIN[1] += simParams->WALL_SPEED[2]*KOEF * simParams->DELTA;
-  simParams->WALLS_MAX[1] -= simParams->WALL_SPEED[3]*KOEF * simParams->DELTA;
-
-  simParams->WALLS_MIN[2] += simParams->WALL_SPEED[4]*KOEF * simParams->DELTA;
-  simParams->WALLS_MAX[2] -= simParams->WALL_SPEED[5]*KOEF * simParams->DELTA;
 }

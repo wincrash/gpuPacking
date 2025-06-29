@@ -1,4 +1,5 @@
 #!/bin/bash
+mkdir -p build
 
 module load  compilers/gcc-11.3.0 compilers/cmake-3.27.0 devel/boost-1.82.0 devel/clinfo intel/compiler-2023.1.0 
 cd build

@@ -10,22 +10,13 @@ std::string Writer::getModuleName() { return "Writer"; };
 void Writer::Initialization() {
   SystemCommand("rm -rf data");
   SystemCommand("mkdir -p data");
-  POSITION_R0.resize(data->PARTICLE_COUNT);
-  DISPLACEMENT.resize(data->PARTICLE_COUNT);
   POSITION_R.resize(data->PARTICLE_COUNT);
-  VELOCITY_MASS.resize(data->PARTICLE_COUNT);
-  ANGULAR_VELOCITY_MATERIAL.resize(data->PARTICLE_COUNT);
-  FORCE.resize(data->PARTICLE_COUNT);
-  TORQUE.resize(data->PARTICLE_COUNT);
+  VELOCITY.resize(data->PARTICLE_COUNT);
   NN_COUNT.resize(data->PARTICLE_COUNT);
   FIX.resize(data->PARTICLE_COUNT);
-  BONDS.resize(data->BOND_COUNT);
-  BOND_STATE.resize(data->BOND_COUNT);
-  BOND_FORCE_NORMAL.resize(data->BOND_COUNT);
-  BOND_FORCE_TANGENTIAL.resize(data->BOND_COUNT);
-  COPY_VECTOR(data->BONDS, BONDS);
-  COPY_VECTOR(data->POSITION_R, POSITION_R0);
-  COPY_VECTOR(data->FIX, FIX);
+  MAX_OVERLAP.resize(data->PARTICLE_COUNT);
+  STOPPED.resize(data->PARTICLE_COUNT);
+
 }
 template <class T> void Write(T var, std::ofstream &file) {
   char *varArray = reinterpret_cast<char *>(&var);
@@ -37,24 +28,15 @@ template <class T> void Write(T var, std::ofstream &file) {
 void Writer::Processing() {
   if (!this->simParams->WRITE_RESULTS)
     return;
-
+  COPY_VECTOR(data->FIX, FIX);
   COPY_VECTOR(data->POSITION_R, POSITION_R);
-  COPY_VECTOR(data->VELOCITY_MASS, VELOCITY_MASS);
-  COPY_VECTOR(data->ANGULAR_VELOCITY_MATERIAL, ANGULAR_VELOCITY_MATERIAL);
-  COPY_VECTOR(data->FORCE, FORCE);
-  COPY_VECTOR(data->TORQUE, TORQUE);
+  COPY_VECTOR(data->VELOCITY, VELOCITY);
   COPY_VECTOR(data->NN_COUNT, NN_COUNT);
-  COPY_VECTOR(data->BOND_STATE, BOND_STATE);
-  COPY_VECTOR(data->FORCE_NORMAL, BOND_FORCE_NORMAL);
-  COPY_VECTOR(data->FORCE_TANGENTIAL, BOND_FORCE_TANGENTIAL);
+  COPY_VECTOR(data->MAX_OVERLAP, MAX_OVERLAP);
+  COPY_VECTOR(data->STOPPED, STOPPED);
+  
+  
   WAIT();
-
-  for (int i = 0; i < data->PARTICLE_COUNT; i++) {
-    DISPLACEMENT[i][0] = POSITION_R[i][0] - POSITION_R0[i][0];
-    DISPLACEMENT[i][1] = POSITION_R[i][1] - POSITION_R0[i][1];
-    DISPLACEMENT[i][2] = POSITION_R[i][2] - POSITION_R0[i][2];
-    DISPLACEMENT[i][3] = 0;
-  }
 
   std::stringstream str;
   str << "data/OUTPUT_" << std::setfill('0') << std::setw(10) << this->simParams->cstep << ".vtk";
@@ -73,43 +55,13 @@ void Writer::Processing() {
   }
 
   file << std::endl;
-  if (data->BOND_COUNT > 0) {
-    file << "LINES " << data->BOND_COUNT << " " << data->BOND_COUNT * 3 << std::endl;
-    for (size_t i = 0; i < data->BOND_COUNT; i++) {
-      Write<int>(2, file);
-      Write<int>(BONDS[i][0], file);
-      Write<int>(BONDS[i][1], file);
-    }
-  } else {
+
     file << "VERTICES " << data->PARTICLE_COUNT << " " << data->PARTICLE_COUNT * 2 << std::endl;
     for (int i = 0; i < data->PARTICLE_COUNT; i++) {
       Write<int>(1, file);
       Write<int>(i, file);
     }
-  }
-  if (data->BOND_COUNT > 0) {
-    WAIT();
-
-    file << std::endl;
-    file << "CELL_DATA " << data->BOND_COUNT << std::endl;
-    file << "SCALARS STATUS int" << std::endl;
-    file << "LOOKUP_TABLE default" << std::endl;
-    for (size_t i = 0; i < data->BOND_COUNT; i++)
-      Write<int>(BOND_STATE[i], file);
-    file << std::endl;
-
-    file << "SCALARS BOND_FORCE_NORMAL double" << std::endl;
-    file << "LOOKUP_TABLE default" << std::endl;
-    for (size_t i = 0; i < data->BOND_COUNT; i++)
-      Write<double>(BOND_FORCE_NORMAL[i][3], file);
-    file << std::endl;
-
-    file << "SCALARS BOND_FORCE_TANGENTIAL double" << std::endl;
-    file << "LOOKUP_TABLE default" << std::endl;
-    for (size_t i = 0; i < data->BOND_COUNT; i++)
-      Write<double>(BOND_FORCE_TANGENTIAL[i][3], file);
-    file << std::endl;
-  }
+  
 
   file << std::endl;
   file << "POINT_DATA " << data->PARTICLE_COUNT << std::endl;
@@ -123,45 +75,15 @@ void Writer::Processing() {
 
   file << "VECTORS VELOCITY double" << std::endl;
   for (size_t i = 0; i < data->PARTICLE_COUNT; i++) {
-    Write<double>(VELOCITY_MASS[i][0], file);
-    Write<double>(VELOCITY_MASS[i][1], file);
-    Write<double>(VELOCITY_MASS[i][2], file);
+    Write<double>(VELOCITY[i][0], file);
+    Write<double>(VELOCITY[i][1], file);
+    Write<double>(VELOCITY[i][2], file);
   }
 
   file << std::endl;
 
-  file << "VECTORS ANGULAR_VELOCITY double" << std::endl;
-  for (size_t i = 0; i < data->PARTICLE_COUNT; i++) {
-    Write<double>(ANGULAR_VELOCITY_MATERIAL[i][0], file);
-    Write<double>(ANGULAR_VELOCITY_MATERIAL[i][1], file);
-    Write<double>(ANGULAR_VELOCITY_MATERIAL[i][2], file);
-  }
 
-  file << std::endl;
 
-  file << "VECTORS FORCE double" << std::endl;
-  for (size_t i = 0; i < data->PARTICLE_COUNT; i++) {
-    Write<double>(FORCE[i][0], file);
-    Write<double>(FORCE[i][1], file);
-    Write<double>(FORCE[i][2], file);
-  }
-  file << std::endl;
-
-  file << "VECTORS TORQUE double" << std::endl;
-  for (size_t i = 0; i < data->PARTICLE_COUNT; i++) {
-    Write<double>(TORQUE[i][0], file);
-    Write<double>(TORQUE[i][1], file);
-    Write<double>(TORQUE[i][2], file);
-  }
-  file << std::endl;
-
-  file << "VECTORS DISPLACEMENT double" << std::endl;
-  for (size_t i = 0; i < data->PARTICLE_COUNT; i++) {
-    Write<double>(POSITION_R[i][0] - POSITION_R0[i][0], file);
-    Write<double>(POSITION_R[i][1] - POSITION_R0[i][1], file);
-    Write<double>(POSITION_R[i][2] - POSITION_R0[i][2], file);
-  }
-  file << std::endl;
 
   file << "SCALARS NN_COUNT int" << std::endl;
   file << "LOOKUP_TABLE default" << std::endl;
@@ -176,6 +98,24 @@ void Writer::Processing() {
   for (size_t i = 0; i < data->PARTICLE_COUNT; i++)
     Write<int>(FIX[i], file);
   file << std::endl;
+
+    file << std::endl;
+
+  file << "SCALARS STOPPED int" << std::endl;
+  file << "LOOKUP_TABLE default" << std::endl;
+  for (size_t i = 0; i < data->PARTICLE_COUNT; i++)
+    Write<int>(STOPPED[i], file);
+  file << std::endl;
+
+
+file << std::endl;
+
+  file << "SCALARS OVERLAP double" << std::endl;
+  file << "LOOKUP_TABLE default" << std::endl;
+  for (size_t i = 0; i < data->PARTICLE_COUNT; i++)
+    Write<double>(MAX_OVERLAP[i], file);
+  file << std::endl;
+
 
   // file << std::endl;
 

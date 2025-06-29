@@ -58,54 +58,20 @@ cxxopts::ParseResult Parameters::getResults()
                 ("help", "Print help")
                 ;
         options.add_options("GENERAL")
-
-                ("simulation-time","Time of total simulations",cxxopts::value<double>()->default_value("0.01"))
-                ("mechanical-time-step","Time step for mechanical simulations",cxxopts::value<double>()->default_value("1E-5"))
+                ("simulation-time","Time of total simulations",cxxopts::value<double>()->default_value("10000"))
+                ("mechanical-time-step","Time step for mechanical simulations",cxxopts::value<double>()->default_value("0.1"))
                 ("timer","Print computation times every N time steps",cxxopts::value<int>()->default_value("1000"))
                 ("writer","Write computation results every N time steps",cxxopts::value<int>()->default_value("1000"))
                 ("search","Write computation results every N time steps",cxxopts::value<int>()->default_value("10"))
                 ("bounds","Bounds of the whole system xmin,xmax,ymin,ymax,zmin,zmax. Also it will place 6 walls on bounds",cxxopts::value<std::vector<double>>()->default_value("0,1,0,1,0,1"))
-                ("wall-speeds","Define wall speeds, positive value only, 6 values for 6 wals. Xmin, Xmax, Ymin Ymax, Zmin Zmax",cxxopts::value<std::vector<double>>()->default_value("0,0,0,0,0,0"))
-                ("load-output","Print wall loads every N steps",cxxopts::value<int>()->default_value("1000"))                
-                ("fix1","Fixed particles speed and direction",cxxopts::value<std::vector<double>>()->default_value("0,0,0"))
-                ("fix2","Fixed particles speed and direction",cxxopts::value<std::vector<double>>()->default_value("0,0,0"))
-                ("enable-fix","Moving is based on fix. 1 - on , 0 off",cxxopts::value<int>()->default_value("0"))
-                ("speed-startup","The steps count from which the speed of walls or fixed particles gets desire speed.",cxxopts::value<int>()->default_value("1"))
-                ("area","Area for stress calculation. By default it takes average force of both walls/fix",cxxopts::value<double>()->default_value("1.0"))
-                ;
-
-        options.add_options("MATERIAL")
-                ("gravitation","Gravitation of the system",cxxopts::value<std::vector<double>>()->default_value("0,0,0"))
-                ("materials-E","Material normal stiffness",cxxopts::value<std::vector<double>>()->default_value("1E+7"))
-                ("materials-NIU","Material tangential stiffness",cxxopts::value<std::vector<double>>()->default_value("0.2"))
-                ("materials-RO","Material density",cxxopts::value<std::vector<double>>()->default_value("2400"))
-                ("FRICTION","Friction coef",cxxopts::value<std::vector<double>>()->default_value("0.5"))
-                ("ID1","Material combination ID1",cxxopts::value<std::vector<int>>()->default_value("0"))
-                ("ID2","Material combination ID2",cxxopts::value<std::vector<int>>()->default_value("0"))
-
-                ("normal-damping","Damping coeficient for normal force",cxxopts::value<double>()->default_value("0"))
-                ("tangential-damping","Damping coeficient for tangential force",cxxopts::value<double>()->default_value("0"))
-                ("rolling-friction","Rolling friction",cxxopts::value<double>()->default_value("0"))
-                ("wall-material","wall material",cxxopts::value<int>()->default_value("0"))
-                ;
-
-
-        options.add_options("PARALLEL_BOND")
-                ("enable-parallel-bond","Parallel bond enable 1 - on , 0 off",cxxopts::value<int>()->default_value("0"))
-                ("parallel-bond-E","Young's modulus for parallel bond",cxxopts::value<std::vector<double>>()->default_value("1E+7"))
-                ("parallel-bond-shear-ratio","Shear ratio for parallel bond",cxxopts::value<std::vector<double>>()->default_value("0.2"))
-                ("parallel-bond-radius-multiplier","Radius multiplier for parallel bond",cxxopts::value<std::vector<double>>()->default_value("1.0"))
-                ("parallel-bond-max-tensile-stress","Maximum tensile stress",cxxopts::value<std::vector<double>>()->default_value("1E+8"))
-                ("parallel-bond-max-shear-stress","Maximum tensile stress",cxxopts::value<std::vector<double>>()->default_value("1E+7"))
-                ("parallel-bond-max-compression-stress","Maximum compression stress",cxxopts::value<std::vector<double>>()->default_value("1E+15,1E+15,1E+15,1E+15,1E+15"))
-                ("parallel-bond-damping","Histeric damping",cxxopts::value<double>()->default_value("0.0"))
+                ("scale","Scale radius",cxxopts::value<double>()->default_value("1.0"))
                 ;
 
 
         cxxopts::ParseResult result = (options.parse(argcc,argvv));
         if (result.count("help"))
         {
-            std::cout << options.help({"","GENERAL","MATERIAL","PARALLEL_BOND","CONTACT_BOND"}) << std::endl;
+            std::cout << options.help({"","GENERAL"}) << std::endl;
             exit(0);
         }
 
